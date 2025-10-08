@@ -21,13 +21,20 @@ import com.example.redcurtainapp.navigation.Screen
 import com.example.redcurtainapp.MovieGridScreen
 import com.example.redcurtainapp.ui.screens.PollsScreen
 import com.example.redcurtainapp.ui.screens.ProfileScreen
+import com.example.redcurtainapp.ui.screens.MovieDetailScreen
+import com.example.redcurtainapp.ui.screens.SettingsScreen
+import com.example.redcurtainapp.ui.screens.SplashScreen
+import com.example.redcurtainapp.ui.screens.SearchScreen
+import com.example.redcurtainapp.ui.theme.RedCurtainAppTheme
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            RedCurtainApp()
+            RedCurtainAppTheme {
+                RedCurtainApp()
+            }
         }
     }
 }
@@ -41,12 +48,27 @@ fun RedCurtainApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = Screen.Splash.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { MovieGridScreen() }
+            composable(Screen.Splash.route) {
+                SplashScreen(onFinished = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Splash.route) { inclusive = true } } })
+            }
+            composable(Screen.Home.route) { MovieGridScreen(navController) }
             composable(Screen.Polls.route) { PollsScreen() }
             composable(Screen.Profile.route) { ProfileScreen() }
+            composable(Screen.MovieDetail.route) { backStackEntry ->
+                val raw = backStackEntry.arguments?.getString("title") ?: ""
+                val title = java.net.URLDecoder.decode(raw, "UTF-8")
+                MovieDetailScreen(titleArg = title)
+            }
+            composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Search.route) {
+                SearchScreen(onSelect = { movie ->
+                    val encoded = java.net.URLEncoder.encode(movie.title, "UTF-8")
+                    navController.navigate("movieDetail/$encoded")
+                })
+            }
         }
     }
 }

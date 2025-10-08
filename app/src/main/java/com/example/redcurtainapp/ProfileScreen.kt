@@ -19,12 +19,25 @@ fun ProfileScreen() {
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text("Name: John Doe", style = MaterialTheme.typography.bodyLarge)
-            Text("Email: johndoe@example.com", style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = { /* TODO: Edit profile */ }) {
-                Text("Edit Profile")
+            Text("Personal Information", style = MaterialTheme.typography.titleMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("User account")
+                Text("Theme")
+                Text("Appearance")
+            }
+
+            Text("History", style = MaterialTheme.typography.titleMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Transaction history")
+                Text("Movie booking history")
+            }
+
+            Text("Support", style = MaterialTheme.typography.titleMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("App feedback")
+                Text("Customer support (mailto: support@example.com)")
             }
         }
     }
