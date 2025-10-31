@@ -1,0 +1,542 @@
+package com.example.redcurtainapp.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import com.example.redcurtainapp.model.*
+import java.text.SimpleDateFormat
+import java.util.*
+import java.net.URLEncoder
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SeatingScreen(
+    movieId: String,
+    movieTitle: String,
+    navController: NavHostController? = null
+) {
+    var selectedSeats by remember { mutableStateOf<List<Seat>>(emptyList()) }
+    var cinemaHall by remember { mutableStateOf(createSampleCinemaHall()) }
+    var selectedDate by remember { mutableStateOf("") }
+    var selectedTime by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    
+    val totalPrice = selectedSeats.sumOf { it.price }
+    val scrollState = rememberLazyListState()
+    
+    // Scroll to top when screen is first displayed
+    LaunchedEffect(Unit) {
+        scrollState.scrollToItem(0)
+    }
+    
+    Scaffold(
+        topBar = {
+            Box(modifier = Modifier.padding(top = 32.dp)) {
+                TopAppBar(
+                    title = { 
+                        Text(
+                            text = "Choose Seats",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController?.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFF1A1A1A)
+                    )
+                )
+            }
+        },
+        bottomBar = {
+            if (selectedSeats.isNotEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Selected Seats: ${selectedSeats.joinToString(", ") { "${it.row}${it.number}" }}",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Total: $${String.format("%.2f", totalPrice)}",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { 
+                                // Navigate to booking summary
+                                val seatsString = selectedSeats.joinToString(",") { "${it.row}${it.number}" }
+                                navController?.navigate(
+                                    "bookingSummary/$movieId/${URLEncoder.encode(movieTitle, "UTF-8")}/$seatsString/${URLEncoder.encode(selectedDate, "UTF-8")}/${URLEncoder.encode(selectedTime, "UTF-8")}/$totalPrice"
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF6200EE)
+                            )
+                        ) {
+                            Text(
+                                text = "Continue Booking",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .background(Color(0xFF1A1A1A))
+        ) {
+            LazyColumn(
+                state = scrollState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Movie Info
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = movieTitle,
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Cinema Hall: ${cinemaHall.name}",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                            
+                            // Date and Time Selection
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Date Picker
+                                Button(
+                                    onClick = { showDatePicker = true },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF6200EE)
+                                    )
+                                ) {
+                                    Text(
+                                        text = if (selectedDate.isNotEmpty()) selectedDate else "Select Date",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                
+                                // Time Picker
+                                Button(
+                                    onClick = { showTimePicker = true },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF6200EE)
+                                    )
+                                ) {
+                                    Text(
+                                        text = if (selectedTime.isNotEmpty()) selectedTime else "Select Time",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            
+            // Screen Indicator
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "SCREEN",
+                        color = Color.Gray,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            // Seat Grid
+            items(cinemaHall.rows) { row ->
+                SeatRow(
+                    row = row,
+                    seatsPerRow = cinemaHall.seatsPerRow,
+                    premiumRows = cinemaHall.premiumRows,
+                    basePrice = cinemaHall.basePrice,
+                    premiumPrice = cinemaHall.premiumPrice,
+                    selectedSeats = selectedSeats,
+                    onSeatClick = { seat ->
+                        selectedSeats = if (seat in selectedSeats) {
+                            selectedSeats - seat
+                        } else {
+                            selectedSeats + seat
+                        }
+                    }
+                )
+            }
+            
+            // Seat Legend
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2D2D))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        SeatLegendItem(
+                            color = Color.Green,
+                            label = "Available"
+                        )
+                        SeatLegendItem(
+                            color = Color.Red,
+                            label = "Occupied"
+                        )
+                        SeatLegendItem(
+                            color = Color.Blue,
+                            label = "Selected"
+                        )
+                        SeatLegendItem(
+                            color = Color.Yellow,
+                            label = "Premium"
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Date Picker Dialog - outside LazyColumn but inside Box
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDateSelected = { date ->
+                    selectedDate = date
+                    showDatePicker = false
+                },
+                onDismiss = { showDatePicker = false }
+            )
+        }
+        
+        // Time Picker Dialog - outside LazyColumn but inside Box
+        if (showTimePicker) {
+            TimePickerDialog(
+                onTimeSelected = { time ->
+                    selectedTime = time
+                    showTimePicker = false
+                },
+                onDismiss = { showTimePicker = false }
+            )
+        }
+    }
+    }
+}
+
+@Composable
+private fun SeatRow(
+    row: String,
+    seatsPerRow: Int,
+    premiumRows: List<String>,
+    basePrice: Double,
+    premiumPrice: Double,
+    selectedSeats: List<Seat>,
+    onSeatClick: (Seat) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Row Label
+        Text(
+            text = row,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(30.dp),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Seats
+        repeat(seatsPerRow) { seatNumber ->
+            val seatId = "${row}${seatNumber + 1}"
+            val isPremium = row in premiumRows
+            
+            // All seats start as available (no default reserved/occupied seats)
+            val baseSeatType = if (isPremium) SeatType.PREMIUM else SeatType.AVAILABLE
+            
+            val seat = Seat(
+                id = seatId,
+                row = row,
+                number = seatNumber + 1,
+                type = baseSeatType,
+                price = if (isPremium) premiumPrice else basePrice
+            )
+            
+            // Check if this seat is currently selected
+            val finalSeat = if (seat in selectedSeats) {
+                seat.copy(type = SeatType.SELECTED)
+            } else {
+                seat
+            }
+            
+            SeatItem(
+                seat = finalSeat,
+                onClick = { onSeatClick(finalSeat) },
+                modifier = Modifier.padding(horizontal = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeatItem(
+    seat: Seat,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when (seat.type) {
+        SeatType.AVAILABLE -> Color.Green.copy(alpha = 0.7f)
+        SeatType.SELECTED -> Color.Blue.copy(alpha = 0.7f)
+        SeatType.OCCUPIED -> Color.Red.copy(alpha = 0.7f)
+        SeatType.PREMIUM -> Color.Yellow.copy(alpha = 0.7f)
+        SeatType.DISABLED -> Color.Gray.copy(alpha = 0.7f)
+    }
+    
+    val textColor = when (seat.type) {
+        SeatType.AVAILABLE, SeatType.SELECTED, SeatType.PREMIUM -> Color.White
+        SeatType.OCCUPIED, SeatType.DISABLED -> Color.Black
+    }
+    
+    Box(
+        modifier = modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .clickable(enabled = seat.isSelectable) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = seat.number.toString(),
+            color = textColor,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun SeatLegendItem(
+    color: Color,
+    label: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .background(color, RoundedCornerShape(2.dp))
+        )
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 12.sp
+        )
+    }
+}
+
+private fun createSampleCinemaHall(): CinemaHall {
+    return CinemaHall(
+        id = "hall1",
+        name = "Screen 1",
+        rows = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"),
+        seatsPerRow = 9,
+        premiumRows = listOf("A", "B"),
+        basePrice = 12.0,
+        premiumPrice = 18.0
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialog(
+    onDateSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val calendar = remember { Calendar.getInstance() }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = calendar.timeInMillis
+    )
+    
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                    onDateSelected(dateFormat.format(Date(millis)))
+                }
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
+
+@Composable
+private fun TimePickerDialog(
+    onTimeSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedHour by remember { mutableStateOf(0) }
+    var selectedMinute by remember { mutableStateOf(0) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Time") },
+        text = {
+            Column {
+                HourMinutePicker(
+                    selectedHour = selectedHour,
+                    selectedMinute = selectedMinute,
+                    onHourChange = { selectedHour = it },
+                    onMinuteChange = { selectedMinute = it }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val timeString = String.format("%02d:%02d", selectedHour, selectedMinute)
+                onTimeSelected(timeString)
+                onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun HourMinutePicker(
+    selectedHour: Int,
+    selectedMinute: Int,
+    onHourChange: (Int) -> Unit,
+    onMinuteChange: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Hour", style = MaterialTheme.typography.labelMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
+                items(24) { hour ->
+                    Box(
+                        modifier = Modifier
+                            .clickable { onHourChange(hour) }
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = String.format("%02d", hour),
+                            color = if (hour == selectedHour) Color(0xFF6200EE) else Color.Gray,
+                            fontWeight = if (hour == selectedHour) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+        
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Minute", style = MaterialTheme.typography.labelMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
+                items(60) { minute ->
+                    Box(
+                        modifier = Modifier
+                            .clickable { onMinuteChange(minute) }
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = String.format("%02d", minute),
+                            color = if (minute == selectedMinute) Color(0xFF6200EE) else Color.Gray,
+                            fontWeight = if (minute == selectedMinute) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

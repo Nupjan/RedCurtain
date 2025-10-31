@@ -1,0 +1,346 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/doctor_strange_background"
+    tools:context=".MovieDetailActivity">
+
+    <!-- Top navigation bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/back_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="@string/back_button_description"/>
+
+        <ImageView
+            android:id="@+id/more_options_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_more_vert"
+            android:contentDescription="@string/more_options_description"/>
+    </RelativeLayout>
+
+    <!-- Movie Title and Description -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:layout_marginTop="40dp">
+
+        <TextView
+            android:id="@+id/movie_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Doctor Strange"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"/>
+
+        <TextView
+            android:id="@+id/movie_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="in the Multiverse of Madness"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/movie_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dr. Stephen Strange casts a forbidden spell that opens the doorway to the multiverse, including alternate versions of..."
+            android:textSize="13sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:lineSpacingMultiplier="1.3"/>
+
+        <TextView
+            android:id="@+id/read_more_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="read more"
+            android:textSize="13sp"
+            android:textColor="#9999FF"
+            android:layout_marginTop="4dp"/>
+
+    </LinearLayout>
+
+    <!-- Date and Time Selection -->
+    <TextView
+        android:id="@+id/select_date_time_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select date and time"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Horizontal scrollable list of dates and times -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Dates -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <!-- Thu 21 -->
+                <LinearLayout
+                    android:id="@+id/date_thu_21"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/date_time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thu"
+                        android:textSize="13sp"
+                        android:textColor="#C5C5C5"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="21"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- Fri 22 -->
+                <LinearLayout
+                    android:id="@+id/date_fri_22"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/date_time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fri"
+                        android:textSize="13sp"
+                        android:textColor="#C5C5C5"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="22"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- Sat 23 -->
+                <LinearLayout
+                    android:id="@+id/date_sat_23"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/date_time_selector_selected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sat"
+                        android:textSize="13sp"
+                        android:textColor="@android:color/white"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="23"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- Sun 24 -->
+                <LinearLayout
+                    android:id="@+id/date_sun_24"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/date_time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sun"
+                        android:textSize="13sp"
+                        android:textColor="#C5C5C5"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="24"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- Mon 25 -->
+                <LinearLayout
+                    android:id="@+id/date_mon_25"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/date_time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mon"
+                        android:textSize="13sp"
+                        android:textColor="#C5C5C5"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="25"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Times -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- 16:00 -->
+                <LinearLayout
+                    android:id="@+id/time_1600"
+                    android:layout_width="90dp"
+                    android:layout_height="35dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="16:00"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- 17:00 -->
+                <LinearLayout
+                    android:id="@+id/time_1700"
+                    android:layout_width="90dp"
+                    android:layout_height="35dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="17:00"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- 18:00 -->
+                <LinearLayout
+                    android:id="@+id/time_1800"
+                    android:layout_width="90dp"
+                    android:layout_height="35dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/time_selector_selected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="18:00"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- 19:00 -->
+                <LinearLayout
+                    android:id="@+id/time_1900"
+                    android:layout_width="90dp"
+                    android:layout_height="35dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/time_selector_unselected"
+                    android:layout_marginEnd="6dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="19:00"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+                <!-- 20:00 -->
+                <LinearLayout
+                    android:id="@+id/time_2000"
+                    android:layout_width="90dp"
+                    android:layout_height="35dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/time_selector_unselected">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="20:00"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</LinearLayout>

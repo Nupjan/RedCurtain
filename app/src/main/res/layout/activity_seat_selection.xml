@@ -1,0 +1,793 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/doctor_strange_background"
+    tools:context=".ChooseSeatsActivity">
+
+    <!-- Top Navigation Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="16dp"
+        android:fitsSystemWindows="true">
+
+        <ImageView
+            android:id="@+id/back_button_seats"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="@string/back_button_description"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose Seats"
+            android:layout_centerInParent="true"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"/>
+
+        <ImageView
+            android:id="@+id/calendar_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_calendar"
+            android:contentDescription="@string/calendar_description"/>
+    </RelativeLayout>
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:id="@+id/scroll_view_seats"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <!-- Screen Indicator -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Screen"
+        android:gravity="center"
+        android:textColor="#80FFFFFF"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Curved Line Indicator -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="16dp"
+        android:src="@drawable/curved_line_indicator"
+        android:scaleType="fitXY"
+        android:layout_marginBottom="32dp"
+        android:contentDescription="@string/curved_line_description"/>
+
+    <!-- Seat Grid -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <!-- Row A -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="A"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Seat A1 -->
+            <ImageView
+                android:id="@+id/seat_a1"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A2 -->
+            <ImageView
+                android:id="@+id/seat_a2"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A3 -->
+            <ImageView
+                android:id="@+id/seat_a3"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A4 -->
+            <ImageView
+                android:id="@+id/seat_a4"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A5 -->
+            <ImageView
+                android:id="@+id/seat_a5"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_selected"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A6 -->
+            <ImageView
+                android:id="@+id/seat_a6"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_selected"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A7 -->
+            <ImageView
+                android:id="@+id/seat_a7"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A8 -->
+            <ImageView
+                android:id="@+id/seat_a8"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat A9 -->
+            <ImageView
+                android:id="@+id/seat_a9"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row B -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="B"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Seat B1 -->
+            <ImageView
+                android:id="@+id/seat_b1"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B2 -->
+            <ImageView
+                android:id="@+id/seat_b2"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B3 -->
+            <ImageView
+                android:id="@+id/seat_b3"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B4 -->
+            <ImageView
+                android:id="@+id/seat_b4"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B5 -->
+            <ImageView
+                android:id="@+id/seat_b5"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B6 -->
+            <ImageView
+                android:id="@+id/seat_b6"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B7 -->
+            <ImageView
+                android:id="@+id/seat_b7"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B8 -->
+            <ImageView
+                android:id="@+id/seat_b8"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat B9 -->
+            <ImageView
+                android:id="@+id/seat_b9"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row C -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="C"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Seat C1 -->
+            <ImageView
+                android:id="@+id/seat_c1"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C2 -->
+            <ImageView
+                android:id="@+id/seat_c2"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C3 -->
+            <ImageView
+                android:id="@+id/seat_c3"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C4 -->
+            <ImageView
+                android:id="@+id/seat_c4"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C5 -->
+            <ImageView
+                android:id="@+id/seat_c5"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C6 -->
+            <ImageView
+                android:id="@+id/seat_c6"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C7 -->
+            <ImageView
+                android:id="@+id/seat_c7"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C8 -->
+            <ImageView
+                android:id="@+id/seat_c8"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat C9 -->
+            <ImageView
+                android:id="@+id/seat_c9"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_reserved"
+                android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row D -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="D"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Seat D1 -->
+            <ImageView
+                android:id="@+id/seat_d1"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D2 -->
+            <ImageView
+                android:id="@+id/seat_d2"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D3 -->
+            <ImageView
+                android:id="@+id/seat_d3"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D4 -->
+            <ImageView
+                android:id="@+id/seat_d4"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D5 -->
+            <ImageView
+                android:id="@+id/seat_d5"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D6 -->
+            <ImageView
+                android:id="@+id/seat_d6"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D7 -->
+            <ImageView
+                android:id="@+id/seat_d7"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D8 -->
+            <ImageView
+                android:id="@+id/seat_d8"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+            <!-- Seat D9 -->
+            <ImageView
+                android:id="@+id/seat_d9"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/seat_available"
+                android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row E -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="E"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_e1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_e9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row F -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="F"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_f1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_f9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row G -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="G"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_g1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_g9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row H -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="H"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_h1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_h9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row I -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="I"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_i1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_i9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row J -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="J"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_j1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_j9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Row K -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:text="K"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_marginEnd="16dp"/>
+
+            <ImageView android:id="@+id/seat_k1" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k2" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k3" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k4" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k5" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k6" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k7" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k8" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+            <ImageView android:id="@+id/seat_k9" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/seat_available" android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+        <!-- Seat Number Labels -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"/> <!-- Spacer for row label -->
+
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="1"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="2"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="3"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="4"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="5"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="6"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="7"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="8"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="wrap_content"
+                android:text="9"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textColor="#80FFFFFF"
+                android:layout_marginHorizontal="4dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Legend -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/dot_available" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Available"
+                android:textColor="#C5C5C5"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/dot_reserved" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reserved"
+                android:textColor="#C5C5C5"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/dot_selected" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selected"
+                android:textColor="#C5C5C5"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    </LinearLayout>
+    </ScrollView>
+
+    <!-- Continue Booking Button -->
+    <Button
+        android:id="@+id/continue_booking_button_seats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/button_background_gradient"
+        android:text="Continue booking"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"/>
+
+</LinearLayout>
