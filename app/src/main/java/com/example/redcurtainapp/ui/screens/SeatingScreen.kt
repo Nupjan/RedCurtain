@@ -462,9 +462,34 @@ private fun DatePickerDialog(
     onDateSelected: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val calendar = remember { Calendar.getInstance() }
+    // Get current date and set time to start of today
+    val today = remember { 
+        Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    }
+    
+    // Calculate tomorrow (minimum selectable date - after current date)
+    val tomorrow = remember {
+        Calendar.getInstance().apply {
+            timeInMillis = today.timeInMillis
+            add(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+    }
+    
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = calendar.timeInMillis
+        initialSelectedDateMillis = tomorrow.timeInMillis,
+        yearRange = IntRange(
+            today.get(Calendar.YEAR),
+            today.get(Calendar.YEAR) + 1 // Allow up to 1 year in the future
+        )
     )
     
     DatePickerDialog(
@@ -472,10 +497,22 @@ private fun DatePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 datePickerState.selectedDateMillis?.let { millis ->
-                    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                    onDateSelected(dateFormat.format(Date(millis)))
+                    val selectedDate = Date(millis)
+                    val tomorrowStart = tomorrow.timeInMillis
+                    
+                    // Validate that selected date is after today (tomorrow or later)
+                    if (millis >= tomorrowStart) {
+                        val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+                        onDateSelected(dateFormat.format(selectedDate))
+                        onDismiss()
+                    } else {
+                        // This shouldn't happen if date picker is configured correctly,
+                        // but add validation as a safety measure
+                        onDismiss()
+                    }
+                } ?: run {
+                    onDismiss()
                 }
-                onDismiss()
             }) {
                 Text("OK")
             }
@@ -486,7 +523,13 @@ private fun DatePickerDialog(
             }
         }
     ) {
-        DatePicker(state = datePickerState)
+        DatePicker(
+            state = datePickerState,
+            dateValidator = { dateMillis ->
+                // Only allow dates that are after today (tomorrow and beyond)
+                dateMillis >= tomorrow.timeInMillis
+            }
+        )
     }
 }
 

@@ -44,6 +44,8 @@ import com.example.redcurtainapp.model.Transaction
 import com.example.redcurtainapp.model.BookingDao
 import com.example.redcurtainapp.model.SeatBookingDao
 import com.example.redcurtainapp.model.TransactionDao
+import com.example.redcurtainapp.model.UserProfile
+import com.example.redcurtainapp.model.UserProfileDao
 
 // --- Data Model ---
 @Entity(tableName = "movies")
@@ -80,9 +82,10 @@ interface MovieDao {
         Movie::class,
         Booking::class,
         SeatBooking::class,
-        Transaction::class
+        Transaction::class,
+        UserProfile::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class MovieDatabase : RoomDatabase() {
@@ -90,6 +93,7 @@ abstract class MovieDatabase : RoomDatabase() {
     abstract fun bookingDao(): BookingDao
     abstract fun seatBookingDao(): SeatBookingDao
     abstract fun transactionDao(): TransactionDao
+    abstract fun userProfileDao(): UserProfileDao
 
     companion object {
         @Volatile
