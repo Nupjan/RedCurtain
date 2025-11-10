@@ -38,6 +38,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.redcurtainapp.model.Booking
+import com.example.redcurtainapp.model.SeatBooking
+import com.example.redcurtainapp.model.Transaction
+import com.example.redcurtainapp.model.BookingDao
+import com.example.redcurtainapp.model.SeatBookingDao
+import com.example.redcurtainapp.model.TransactionDao
 
 // --- Data Model ---
 @Entity(tableName = "movies")
@@ -69,9 +75,21 @@ interface MovieDao {
 }
 
 // --- Room Database ---
-@Database(entities = [Movie::class], version = 2, exportSchema = false)
+@Database(
+    entities = [
+        Movie::class,
+        Booking::class,
+        SeatBooking::class,
+        Transaction::class
+    ],
+    version = 3,
+    exportSchema = false
+)
 abstract class MovieDatabase : RoomDatabase() {
     abstract fun movieDao(): MovieDao
+    abstract fun bookingDao(): BookingDao
+    abstract fun seatBookingDao(): SeatBookingDao
+    abstract fun transactionDao(): TransactionDao
 
     companion object {
         @Volatile
@@ -338,7 +356,7 @@ fun MovieGridScreen(navController: NavHostController) {
                 Card(
                     modifier = Modifier
                         .size(44.dp)
-                        .clickable { /* Search is not part of nav now */ },
+                        .clickable { navController.navigate(Screen.Search.route) },
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFE9B9C7)),
                     elevation = CardDefaults.cardElevation(2.dp)

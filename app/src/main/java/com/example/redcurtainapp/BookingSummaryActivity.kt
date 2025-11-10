@@ -14,6 +14,7 @@ class BookingSummaryActivity : AppCompatActivity() {
         setContentView(R.layout.activity_booking_summary)
         
         // Get data from intent
+        val movieId = intent.getStringExtra("movieId") ?: ""
         val movieTitle = intent.getStringExtra("movieTitle") ?: "Movie Title"
         val selectedSeats = intent.getStringExtra("selectedSeats") ?: ""
         val selectedDate = intent.getStringExtra("selectedDate") ?: ""
@@ -61,6 +62,7 @@ class BookingSummaryActivity : AppCompatActivity() {
         findViewById<Button>(R.id.complete_payment_button).setOnClickListener {
             // Navigate to payment screen
             val intent = Intent(this, PaymentActivity::class.java)
+            intent.putExtra("movieId", movieId)
             intent.putExtra("movieTitle", movieTitle)
             intent.putExtra("selectedSeats", selectedSeats)
             intent.putExtra("selectedDate", selectedDate)

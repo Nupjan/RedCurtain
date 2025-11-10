@@ -69,7 +69,9 @@ class PaymentActivity : AppCompatActivity() {
         }
         
         findViewById<Button>(R.id.process_payment_button).setOnClickListener {
-            processPayment(movieTitle, selectedSeats, selectedDate, selectedTime, totalPrice)
+            // Get movieId from intent
+            val movieId = intent.getStringExtra("movieId") ?: ""
+            processPayment(movieTitle, selectedSeats, selectedDate, selectedTime, totalPrice, movieId)
         }
         
         // Format card number input as user types
@@ -111,7 +113,8 @@ class PaymentActivity : AppCompatActivity() {
         selectedSeats: String,
         selectedDate: String,
         selectedTime: String,
-        totalPrice: Double
+        totalPrice: Double,
+        movieId: String
     ) {
         // Get user input
         val cardNumber = cardNumberInput.text?.toString()?.replace(" ", "") ?: ""
@@ -169,6 +172,7 @@ class PaymentActivity : AppCompatActivity() {
         
         // Navigate to confirmation screen
         val intent = Intent(this, PaymentConfirmationActivity::class.java)
+        intent.putExtra("movieId", movieId)
         intent.putExtra("movieTitle", movieTitle)
         intent.putExtra("selectedSeats", selectedSeats)
         intent.putExtra("selectedDate", selectedDate)

@@ -56,7 +56,7 @@ object TmdbApi {
                 }
                 connection.connectTimeout = 10000
                 connection.readTimeout = 10000
-                
+
                 val responseCode = connection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
@@ -213,6 +213,67 @@ object TmdbApi {
                 backdropUrl = "https://image.tmdb.org/t/p/w1280/7WJjFviFBffEJvtA52mX8WJjz8G.jpg"
             )
         )
+    }
+
+    suspend fun searchMovies(query: String): List<TmdbMovie> = withContext(Dispatchers.IO) {
+        try {
+            val v4Token = com.example.redcurtainapp.BuildConfig.TMDB_V4_TOKEN
+            val v3Key = com.example.redcurtainapp.BuildConfig.TMDB_API_KEY
+            
+            if ((v3Key.isNotBlank() || v4Token.isNotBlank()) && query.isNotBlank()) {
+                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                val url = URL("$BASE_URL/search/movie?query=$encodedQuery&language=en-US&page=1" + if (v4Token.isBlank()) "&api_key=$v3Key" else "")
+                Log.d("TmdbApi", "Searching URL: $url")
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.setRequestProperty("Accept", "application/json")
+                if (v4Token.isNotBlank()) {
+                    connection.setRequestProperty("Authorization", "Bearer $v4Token")
+                }
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
+                
+                val responseCode = connection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject = JSONObject(response)
+                    val results = jsonObject.getJSONArray("results")
+                    
+                    val movies = mutableListOf<TmdbMovie>()
+                    for (i in 0 until results.length()) {
+                        val movieJson = results.getJSONObject(i)
+                        val movie = TmdbMovie(
+                            id = movieJson.getInt("id"),
+                            title = movieJson.getString("title"),
+                            posterUrl = if (movieJson.isNull("poster_path")) null
+                                       else "$IMAGE_BASE${movieJson.getString("poster_path")}",
+                            overview = if (movieJson.isNull("overview")) null else movieJson.getString("overview"),
+                            releaseDate = if (movieJson.isNull("release_date")) null else movieJson.getString("release_date"),
+                            voteAverage = if (movieJson.isNull("vote_average")) null else movieJson.getDouble("vote_average"),
+                            backdropUrl = if (movieJson.isNull("backdrop_path")) null 
+                                        else "$BACKDROP_BASE${movieJson.getString("backdrop_path")}"
+                        )
+                        movies.add(movie)
+                    }
+                    Log.d("TmdbApi", "Search results: ${movies.size} items for query: $query")
+                    return@withContext movies
+                } else {
+                    val error = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                    Log.e("TmdbApi", "HTTP $responseCode while searching movies. Error: $error")
+                }
+            }
+            
+            // Return empty list if search fails or query is blank
+            Log.d("TmdbApi", "Search failed or query blank, returning empty list")
+            emptyList()
+            
+        } catch (e: SocketTimeoutException) {
+            Log.e("TmdbApi", "Timeout searching movies", e)
+            emptyList()
+        } catch (e: Exception) {
+            Log.e("TmdbApi", "Exception searching movies", e)
+            emptyList()
+        }
     }
 
     suspend fun fetchMovieDetails(movieId: Int): TmdbMovieDetail? = withContext(Dispatchers.IO) {

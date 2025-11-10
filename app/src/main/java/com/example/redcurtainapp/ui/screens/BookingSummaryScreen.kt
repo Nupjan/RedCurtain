@@ -78,7 +78,7 @@ fun BookingSummaryScreen(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Divider(color = Color.Gray)
+                        HorizontalDivider(color = Color.Gray)
                         
                         Text(
                             text = movieTitle,
@@ -121,7 +121,7 @@ fun BookingSummaryScreen(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Divider(color = Color.Gray)
+                        HorizontalDivider(color = Color.Gray)
                         
                         Text(
                             text = selectedSeats.joinToString(", ") { "${it.row}${it.number}" },
@@ -153,7 +153,7 @@ fun BookingSummaryScreen(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Divider(color = Color.Gray)
+                        HorizontalDivider(color = Color.Gray)
                         
                         selectedSeats.forEach { seat ->
                             Row(
@@ -173,7 +173,7 @@ fun BookingSummaryScreen(
                             }
                         }
                         
-                        Divider(color = Color.Gray)
+                        HorizontalDivider(color = Color.Gray)
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),

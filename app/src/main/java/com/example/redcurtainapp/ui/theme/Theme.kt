@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 
@@ -47,13 +48,17 @@ fun RedCurtainAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color disabled to maintain red theme
     dynamicColor: Boolean = false,
+    fontSizePreference: String = "Medium",
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val typography = remember(fontSizePreference) { 
+        createTypography(fontSizePreference) 
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = typography,
         content = content
     )
 }

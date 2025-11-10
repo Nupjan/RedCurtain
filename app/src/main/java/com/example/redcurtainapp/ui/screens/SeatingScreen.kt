@@ -25,6 +25,9 @@ import com.example.redcurtainapp.model.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.net.URLEncoder
+import com.example.redcurtainapp.MovieDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,9 +42,36 @@ fun SeatingScreen(
     var selectedTime by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var bookedSeatIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val database = remember { MovieDatabase.getDatabase(context) }
     
     val totalPrice = selectedSeats.sumOf { it.price }
     val scrollState = rememberLazyListState()
+    
+    // Load booked seats when date/time/movieId changes
+    LaunchedEffect(movieId, selectedDate, selectedTime) {
+        if (movieId.isNotEmpty() && selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
+            try {
+                val booked = withContext(Dispatchers.IO) {
+                    database.seatBookingDao().getBookedSeatIdsForShow(movieId, selectedDate, selectedTime)
+                }
+                val bookedSet = booked.toSet()
+                bookedSeatIds = bookedSet
+                
+                // Remove any booked seats from selectedSeats
+                selectedSeats = selectedSeats.filter { seat ->
+                    seat.id !in bookedSet
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                bookedSeatIds = emptySet()
+            }
+        } else {
+            bookedSeatIds = emptySet()
+        }
+    }
     
     // Scroll to top when screen is first displayed
     LaunchedEffect(Unit) {
@@ -218,11 +248,15 @@ fun SeatingScreen(
                     basePrice = cinemaHall.basePrice,
                     premiumPrice = cinemaHall.premiumPrice,
                     selectedSeats = selectedSeats,
+                    bookedSeatIds = bookedSeatIds,
                     onSeatClick = { seat ->
-                        selectedSeats = if (seat in selectedSeats) {
-                            selectedSeats - seat
-                        } else {
-                            selectedSeats + seat
+                        // Prevent selecting booked seats
+                        if (seat.type != SeatType.OCCUPIED && seat.isSelectable) {
+                            selectedSeats = if (selectedSeats.any { it.id == seat.id }) {
+                                selectedSeats.filter { it.id != seat.id }
+                            } else {
+                                selectedSeats + seat
+                            }
                         }
                     }
                 )
@@ -258,30 +292,30 @@ fun SeatingScreen(
                     }
                 }
             }
+            }
+            
+            // Date Picker Dialog - outside LazyColumn but inside Box
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDateSelected = { date ->
+                        selectedDate = date
+                        showDatePicker = false
+                    },
+                    onDismiss = { showDatePicker = false }
+                )
+            }
+            
+            // Time Picker Dialog - outside LazyColumn but inside Box
+            if (showTimePicker) {
+                TimePickerDialog(
+                    onTimeSelected = { time ->
+                        selectedTime = time
+                        showTimePicker = false
+                    },
+                    onDismiss = { showTimePicker = false }
+                )
+            }
         }
-        
-        // Date Picker Dialog - outside LazyColumn but inside Box
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDateSelected = { date ->
-                    selectedDate = date
-                    showDatePicker = false
-                },
-                onDismiss = { showDatePicker = false }
-            )
-        }
-        
-        // Time Picker Dialog - outside LazyColumn but inside Box
-        if (showTimePicker) {
-            TimePickerDialog(
-                onTimeSelected = { time ->
-                    selectedTime = time
-                    showTimePicker = false
-                },
-                onDismiss = { showTimePicker = false }
-            )
-        }
-    }
     }
 }
 
@@ -293,6 +327,7 @@ private fun SeatRow(
     basePrice: Double,
     premiumPrice: Double,
     selectedSeats: List<Seat>,
+    bookedSeatIds: Set<String>,
     onSeatClick: (Seat) -> Unit
 ) {
     Row(
@@ -317,8 +352,15 @@ private fun SeatRow(
             val seatId = "${row}${seatNumber + 1}"
             val isPremium = row in premiumRows
             
-            // All seats start as available (no default reserved/occupied seats)
-            val baseSeatType = if (isPremium) SeatType.PREMIUM else SeatType.AVAILABLE
+            // Check if seat is booked
+            val isBooked = seatId in bookedSeatIds
+            
+            // Determine seat type - booked seats should always be OCCUPIED, never SELECTED
+            val baseSeatType = when {
+                isBooked -> SeatType.OCCUPIED
+                isPremium -> SeatType.PREMIUM
+                else -> SeatType.AVAILABLE
+            }
             
             val seat = Seat(
                 id = seatId,
@@ -328,8 +370,8 @@ private fun SeatRow(
                 price = if (isPremium) premiumPrice else basePrice
             )
             
-            // Check if this seat is currently selected
-            val finalSeat = if (seat in selectedSeats) {
+            // Check if this seat is currently selected AND not booked
+            val finalSeat = if (!isBooked && selectedSeats.any { it.id == seatId }) {
                 seat.copy(type = SeatType.SELECTED)
             } else {
                 seat
@@ -539,4 +581,4 @@ private fun HourMinutePicker(
             }
         }
     }
-}
+}   

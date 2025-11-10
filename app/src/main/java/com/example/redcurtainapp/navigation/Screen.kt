@@ -8,6 +8,8 @@ sealed class Screen(val route: String) {
     object MovieDetail : Screen("movieDetail/{movieId}")
     object Seating : Screen("seating/{movieId}/{movieTitle}")
     object BookingSummary : Screen("bookingSummary/{movieId}/{movieTitle}/{selectedSeats}/{selectedDate}/{selectedTime}/{totalPrice}")
+    object BookingHistory : Screen("bookingHistory")
+    object TransactionHistory : Screen("transactionHistory")
     object Settings : Screen("settings")
     object Search : Screen("search")
 }

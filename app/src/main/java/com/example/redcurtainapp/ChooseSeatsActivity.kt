@@ -10,20 +10,26 @@ import android.widget.ScrollView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.redcurtainapp.model.SeatType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class ChooseSeatsActivity : AppCompatActivity() {
     
     private val seatViews = mutableMapOf<String, ImageView>()
     private val selectedSeats = mutableSetOf<String>()
-    // No seats are reserved by default - they will only be marked as reserved after booking
-    private val reservedSeats = emptySet<String>()
+    private val reservedSeats = mutableSetOf<String>()
     private var selectedDate: String = ""
     private var selectedTime: String = ""
+    private var movieId: String = ""
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_seat_selection)
+        
+        // Get movieId from intent
+        movieId = intent.getStringExtra("movieId") ?: ""
         
         // Ensure ScrollView starts at the top
         val scrollView = findViewById<ScrollView>(R.id.scroll_view_seats)
@@ -34,6 +40,44 @@ class ChooseSeatsActivity : AppCompatActivity() {
         setupSeatViews()
         setupClickListeners()
         updateSeatDisplay()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Load booked seats when date/time changes
+        if (selectedDate.isNotEmpty() && selectedTime.isNotEmpty()) {
+            loadBookedSeats()
+        }
+    }
+    
+    private fun loadBookedSeats() {
+        if (movieId.isEmpty() || selectedDate.isEmpty() || selectedTime.isEmpty()) return
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val database = MovieDatabase.getDatabase(this@ChooseSeatsActivity)
+                val bookedSeatIds = database.seatBookingDao().getBookedSeatIdsForShow(movieId, selectedDate, selectedTime)
+                
+                // Convert seat IDs like "A1" to format "seat_a1"
+                val formattedBookedSeats = bookedSeatIds.map { seatId ->
+                    if (seatId.length >= 2) {
+                        val row = seatId[0].lowercase()
+                        val number = seatId.substring(1)
+                        "seat_${row}${number}"
+                    } else {
+                        ""
+                    }
+                }.filter { it.isNotEmpty() }.toSet()
+                
+                runOnUiThread {
+                    reservedSeats.clear()
+                    reservedSeats.addAll(formattedBookedSeats)
+                    updateSeatDisplay()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
     
     private fun setupSeatViews() {
@@ -143,8 +187,12 @@ class ChooseSeatsActivity : AppCompatActivity() {
         // Format seats list
         val seatList = selectedSeats.joinToString(", ") { it.substring(5).uppercase() }
         
+        // Get movieId from intent
+        val movieId = intent.getStringExtra("movieId") ?: ""
+        
         // Navigate to booking summary
         val intent = Intent(this, BookingSummaryActivity::class.java)
+        intent.putExtra("movieId", movieId)
         intent.putExtra("movieTitle", movieTitle)
         intent.putExtra("selectedSeats", seatList)
         intent.putExtra("selectedDate", finalDate)
@@ -183,6 +231,8 @@ class ChooseSeatsActivity : AppCompatActivity() {
                     "Selected: $selectedDate at $selectedTime", 
                     Toast.LENGTH_SHORT
                 ).show()
+                // Reload booked seats when time changes
+                loadBookedSeats()
             }
             .setNegativeButton("Cancel", null)
             .show()

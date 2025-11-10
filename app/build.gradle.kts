@@ -1,8 +1,23 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.kapt")
+}
+
+fun getLocalProperty(key: String, defaultValue: String = ""): String {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        val localProperties = Properties()
+        FileInputStream(localPropertiesFile).use {
+            localProperties.load(it)
+        }
+        return localProperties.getProperty(key, defaultValue)
+    }
+    return defaultValue
 }
 
 android {
@@ -19,10 +34,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Expose TMDB API key via BuildConfig so we don't hard-code in source
-        val tmdbKey = providers.gradleProperty("TMDB_API_KEY").getOrElse("")
+        // First try local.properties (gitignored), then fallback to gradle.properties
+        val tmdbKey = getLocalProperty("TMDB_API_KEY")
+            .takeIf { it.isNotBlank() }
+            ?: providers.gradleProperty("TMDB_API_KEY").getOrElse("")
         buildConfigField("String", "TMDB_API_KEY", "\"$tmdbKey\"")
         // Optional TMDB v4 bearer token support
-        val tmdbV4 = providers.gradleProperty("TMDB_V4_TOKEN").getOrElse("")
+        val tmdbV4 = getLocalProperty("TMDB_V4_TOKEN")
+            .takeIf { it.isNotBlank() }
+            ?: providers.gradleProperty("TMDB_V4_TOKEN").getOrElse("")
         buildConfigField("String", "TMDB_V4_TOKEN", "\"$tmdbV4\"")
     }
 
@@ -82,6 +102,7 @@ dependencies {
 
     // Tooling/debug
     debugImplementation(libs.androidx.ui.tooling)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.test.manifest)
 }

@@ -1,22 +1,32 @@
 package com.example.redcurtainapp
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.redcurtainapp.navigation.Screen
+import com.example.redcurtainapp.ui.screens.BookingHistoryScreen
 import com.example.redcurtainapp.ui.screens.BookingSummaryScreen
 import com.example.redcurtainapp.ui.screens.MovieDetailScreen
 import com.example.redcurtainapp.ui.screens.PollsScreen
 import com.example.redcurtainapp.ui.screens.ProfileScreen
+import com.example.redcurtainapp.ui.screens.SearchScreen
 import com.example.redcurtainapp.ui.screens.SeatingScreen
 import com.example.redcurtainapp.ui.screens.SplashScreen
+import com.example.redcurtainapp.ui.screens.TransactionHistoryScreen
 import com.example.redcurtainapp.ui.theme.RedCurtainAppTheme
 import java.net.URLDecoder
 import com.example.redcurtainapp.model.Seat
@@ -37,7 +47,43 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            RedCurtainAppTheme {
+            // Read theme preference reactively
+            val prefs = getSharedPreferences("profile_prefs", MODE_PRIVATE)
+            var isDarkTheme by remember { 
+                mutableStateOf(prefs.getBoolean("theme", true)) 
+            }
+            var fontSize by remember { 
+                mutableStateOf(prefs.getString("font_size", "Medium") ?: "Medium") 
+            }
+            
+            // Listen for preference changes - update state when preferences change
+            DisposableEffect(Unit) {
+                val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                    // Update state on main thread (listener is already called on main thread)
+                    when (key) {
+                        "theme" -> {
+                            isDarkTheme = prefs.getBoolean("theme", true)
+                        }
+                        "font_size" -> {
+                            fontSize = prefs.getString("font_size", "Medium") ?: "Medium"
+                        }
+                    }
+                }
+                prefs.registerOnSharedPreferenceChangeListener(listener)
+                
+                onDispose {
+                    try {
+                        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+                    } catch (e: Exception) {
+                        // Ignore if already unregistered
+                    }
+                }
+            }
+            
+            RedCurtainAppTheme(
+                darkTheme = isDarkTheme,
+                fontSizePreference = fontSize
+            ) {
                 AppNavHost()
             }
         }
@@ -109,12 +155,20 @@ private fun AppNavHost() {
         composable(Screen.Home.route) {
             MovieGridScreen(navController)
         }
-            // Search and Settings are removed from bottom navigation and routes
+        composable(Screen.Search.route) {
+            SearchScreen(navController = navController)
+        }
         composable(Screen.Polls.route) {
             PollsScreen()
         }
         composable(Screen.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(navController = navController)
+        }
+        composable(Screen.BookingHistory.route) {
+            BookingHistoryScreen(navController = navController)
+        }
+        composable(Screen.TransactionHistory.route) {
+            TransactionHistoryScreen(navController = navController)
         }
         composable(
             route = Screen.MovieDetail.route,
