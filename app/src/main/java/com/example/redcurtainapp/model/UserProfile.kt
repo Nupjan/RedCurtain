@@ -41,6 +41,10 @@ data class UserProfile(
     @ColumnInfo(name = "date_of_birth")
     val dateOfBirth: String? = null, // Stored as String (YYYY-MM-DD format)
     
+    // Loyalty
+    @ColumnInfo(name = "loyalty_points")
+    val loyaltyPoints: Int = 0,
+    
     // Server-related fields
     @ColumnInfo(name = "server_id")
     val serverId: String? = null, // ID from server (null if not synced)

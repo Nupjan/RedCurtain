@@ -43,6 +43,7 @@ fun SeatingScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var bookedSeatIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var showMissingDateTimeDialog by remember { mutableStateOf(false) }
     
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = remember { MovieDatabase.getDatabase(context) }
@@ -129,12 +130,38 @@ fun SeatingScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { 
-                                // Navigate to booking summary
-                                val seatsString = selectedSeats.joinToString(",") { "${it.row}${it.number}" }
-                                navController?.navigate(
-                                    "bookingSummary/$movieId/${URLEncoder.encode(movieTitle, "UTF-8")}/$seatsString/${URLEncoder.encode(selectedDate, "UTF-8")}/${URLEncoder.encode(selectedTime, "UTF-8")}/$totalPrice"
-                                )
+                            onClick = {
+                                if (selectedDate.isBlank() || selectedTime.isBlank()) {
+                                    // Show prompt
+                                    showMissingDateTimeDialog = true
+                                } else if (selectedSeats.isEmpty()) {
+                                    // Show prompt for no seats selected
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Please select at least one seat",
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    // Validate that selected seats are not already booked
+                                    val selectedSeatIds = selectedSeats.map { "${it.row}${it.number}" }.toSet()
+                                    val conflictingSeats = selectedSeatIds.intersect(bookedSeatIds)
+                                    
+                                    if (conflictingSeats.isNotEmpty()) {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Seat(s) ${conflictingSeats.joinToString(", ")} are no longer available. Please select different seats.",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                        // Remove conflicting seats from selection
+                                        selectedSeats = selectedSeats.filter { "${it.row}${it.number}" !in conflictingSeats }
+                                    } else {
+                                        // All seats are available - navigate to booking summary
+                                        val seatsString = selectedSeats.joinToString(",") { "${it.row}${it.number}" }
+                                        navController?.navigate(
+                                            "bookingSummary/$movieId/${URLEncoder.encode(movieTitle, "UTF-8")}/$seatsString/${URLEncoder.encode(selectedDate, "UTF-8")}/${URLEncoder.encode(selectedTime, "UTF-8")}/$totalPrice"
+                                        )
+                                    }
+                                }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
@@ -313,6 +340,20 @@ fun SeatingScreen(
                         showTimePicker = false
                     },
                     onDismiss = { showTimePicker = false }
+                )
+            }
+
+            // Missing date/time dialog
+            if (showMissingDateTimeDialog) {
+                AlertDialog(
+                    onDismissRequest = { showMissingDateTimeDialog = false },
+                    title = { Text("Select date & time") },
+                    text = { Text("Please select a date and time before continuing.") },
+                    confirmButton = {
+                        TextButton(onClick = { showMissingDateTimeDialog = false }) {
+                            Text("OK")
+                        }
+                    }
                 )
             }
         }
@@ -525,10 +566,7 @@ private fun DatePickerDialog(
     ) {
         DatePicker(
             state = datePickerState,
-            dateValidator = { dateMillis ->
-                // Only allow dates that are after today (tomorrow and beyond)
-                dateMillis >= tomorrow.timeInMillis
-            }
+            // Some library versions don't support dateValidator; we validate on confirm instead.
         )
     }
 }

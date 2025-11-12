@@ -51,14 +51,21 @@ fun MovieDetailScreen(movieId: String, navController: NavHostController? = null)
         try {
             // Convert string ID to integer for TMDB API
             val id = movieId.toIntOrNull()
-            if (id != null) {
-                val details = TmdbApi.fetchMovieDetails(id)
-                movieDetail = details
+            if (id != null && id > 0) {
+                val details = withContext(Dispatchers.IO) {
+                    TmdbApi.fetchMovieDetails(id)
+                }
+                if (details != null) {
+                    movieDetail = details
+                } else {
+                    error = "Movie details not found. The movie may not be available in TMDB database."
+                }
             } else {
-                error = "Invalid movie ID"
+                error = "Invalid movie ID: $movieId. This movie may not have API data available."
             }
         } catch (e: Exception) {
-            error = e.message ?: "Failed to load movie details"
+            android.util.Log.e("MovieDetailScreen", "Error fetching movie details", e)
+            error = "Failed to load movie details: ${e.message ?: "Unknown error"}"
         } finally {
             isLoading = false
         }
@@ -126,13 +133,20 @@ fun MovieDetailScreen(movieId: String, navController: NavHostController? = null)
                                     error = null
                                     try {
                                         val id = movieId.toIntOrNull()
-                                        if (id != null) {
-                                            val details = TmdbApi.fetchMovieDetails(id)
-                                            movieDetail = details
+                                        if (id != null && id > 0) {
+                                            val details = withContext(Dispatchers.IO) {
+                                                TmdbApi.fetchMovieDetails(id)
+                                            }
+                                            if (details != null) {
+                                                movieDetail = details
+                                            } else {
+                                                error = "Movie details not found"
+                                            }
                                         } else {
                                             error = "Invalid movie ID"
                                         }
                                     } catch (e: Exception) {
+                                        android.util.Log.e("MovieDetailScreen", "Retry error", e)
                                         error = e.message ?: "Failed to load movie details"
                                     } finally {
                                         isLoading = false

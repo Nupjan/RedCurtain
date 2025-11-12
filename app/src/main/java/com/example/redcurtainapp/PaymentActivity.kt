@@ -7,6 +7,11 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.redcurtainapp.model.UserProfileDao
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PaymentActivity : AppCompatActivity() {
     
@@ -31,17 +36,29 @@ class PaymentActivity : AppCompatActivity() {
     private lateinit var expiryInput: EditText
     private lateinit var cvvInput: EditText
     private lateinit var paymentErrorText: TextView
+    private lateinit var loyaltyPointsText: TextView
+    private lateinit var pointsErrorText: TextView
+    private lateinit var payWithPointsButton: Button
+
+    private var availablePoints: Int = 0
+    private var totalAmount: Double = 0.0
+    private var movieTitle: String = "Movie"
+    private var selectedSeats: String = ""
+    private var selectedDate: String = ""
+    private var selectedTime: String = ""
+    private var movieId: String = ""
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_payment)
         
         // Get booking data from intent
-        val movieTitle = intent.getStringExtra("movieTitle") ?: "Movie"
-        val selectedSeats = intent.getStringExtra("selectedSeats") ?: ""
-        val selectedDate = intent.getStringExtra("selectedDate") ?: ""
-        val selectedTime = intent.getStringExtra("selectedTime") ?: ""
-        val totalPrice = intent.getDoubleExtra("totalPrice", 0.0)
+        movieTitle = intent.getStringExtra("movieTitle") ?: "Movie"
+        selectedSeats = intent.getStringExtra("selectedSeats") ?: ""
+        selectedDate = intent.getStringExtra("selectedDate") ?: ""
+        selectedTime = intent.getStringExtra("selectedTime") ?: ""
+        totalAmount = intent.getDoubleExtra("totalPrice", 0.0)
+        movieId = intent.getStringExtra("movieId") ?: ""
         
         // Set up UI elements
         findViewById<TextView>(R.id.movie_title_payment).text = movieTitle
@@ -54,7 +71,23 @@ class PaymentActivity : AppCompatActivity() {
         }
         
         findViewById<TextView>(R.id.selected_seats_payment).text = "Seats: $selectedSeats"
-        findViewById<TextView>(R.id.total_price_payment).text = "Total: $${String.format("%.2f", totalPrice)}"
+        findViewById<TextView>(R.id.total_price_payment).text = "Total: $${String.format("%.2f", totalAmount)}"
+
+        // Loyalty UI
+        loyaltyPointsText = findViewById(R.id.loyalty_points_text)
+        pointsErrorText = findViewById(R.id.points_error_text)
+        payWithPointsButton = findViewById(R.id.pay_with_points_button)
+        payWithPointsButton.isEnabled = false
+        payWithPointsButton.setOnClickListener {
+            hidePointsError()
+            val required = Math.ceil(totalAmount * 10.0).toInt() // 10 points per $1
+            if (availablePoints >= required) {
+                navigateToConfirmationWithPoints()
+            } else {
+                showPointsError("Not enough points to cover $$totalAmount")
+            }
+        }
+        loadLoyaltyPoints()
         
         // Initialize input fields
         cardNumberInput = findViewById(R.id.card_number_input)
@@ -69,9 +102,11 @@ class PaymentActivity : AppCompatActivity() {
         }
         
         findViewById<Button>(R.id.process_payment_button).setOnClickListener {
-            // Get movieId from intent
-            val movieId = intent.getStringExtra("movieId") ?: ""
-            processPayment(movieTitle, selectedSeats, selectedDate, selectedTime, totalPrice, movieId)
+            if (movieId.isBlank()) {
+                showError("Invalid movie information. Please select a movie again.")
+                return@setOnClickListener
+            }
+            processPayment(movieTitle, selectedSeats, selectedDate, selectedTime, totalAmount, movieId)
         }
         
         // Format card number input as user types
@@ -101,6 +136,36 @@ class PaymentActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun loadLoyaltyPoints() {
+        val email = AuthManager.getUserEmail(this) ?: return
+        val database = MovieDatabase.getDatabase(this)
+        val dao: UserProfileDao = database.userProfileDao()
+        CoroutineScope(Dispatchers.IO).launch {
+            val points = dao.getLoyaltyPoints(email) ?: 0
+            withContext(Dispatchers.Main) {
+                availablePoints = points
+                loyaltyPointsText.text = "Points: $availablePoints"
+                val required = Math.ceil(totalAmount * 10.0).toInt()
+                payWithPointsButton.isEnabled = availablePoints >= required
+                if (!payWithPointsButton.isEnabled) {
+                    showPointsError("You need $required points to cover $$totalAmount")
+                } else {
+                    hidePointsError()
+                }
+            }
+        }
+    }
+
+    private fun showPointsError(message: String) {
+        pointsErrorText.text = message
+        pointsErrorText.visibility = TextView.VISIBLE
+    }
+
+    private fun hidePointsError() {
+        pointsErrorText.visibility = TextView.GONE
+        pointsErrorText.text = ""
     }
     
     private fun formatCardNumber(cardNumber: String): String {
@@ -179,6 +244,20 @@ class PaymentActivity : AppCompatActivity() {
         intent.putExtra("selectedTime", selectedTime)
         intent.putExtra("totalPrice", totalPrice)
         intent.putExtra("cardNumber", "**** **** **** ${cardNumber.takeLast(4)}")
+        intent.putExtra("paymentMethod", "Card")
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToConfirmationWithPoints() {
+        val intent = Intent(this, PaymentConfirmationActivity::class.java)
+        intent.putExtra("movieId", movieId)
+        intent.putExtra("movieTitle", movieTitle)
+        intent.putExtra("selectedSeats", selectedSeats)
+        intent.putExtra("selectedDate", selectedDate)
+        intent.putExtra("selectedTime", selectedTime)
+        intent.putExtra("totalPrice", totalAmount)
+        intent.putExtra("paymentMethod", "Points")
         startActivity(intent)
         finish()
     }

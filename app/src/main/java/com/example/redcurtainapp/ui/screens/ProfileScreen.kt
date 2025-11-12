@@ -31,12 +31,14 @@ import com.example.redcurtainapp.MovieDatabase
 import com.example.redcurtainapp.model.UserProfile
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavHostController? = null) {
     val context = LocalContext.current
     val userEmail = remember { AuthManager.getUserEmail(context) }
+    val isAdmin = AuthManager.isAdmin(context) // Check admin status directly
     val database = remember { MovieDatabase.getDatabase(context) }
     val coroutineScope = rememberCoroutineScope()
     
@@ -76,7 +78,7 @@ fun ProfileScreen(navController: NavHostController? = null) {
             TopAppBar(
                 title = { 
                     Text(
-                        text = "👤 My Profile",
+                        text = if (isAdmin) "👤 Admin Profile" else "👤 My Profile",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -115,6 +117,102 @@ fun ProfileScreen(navController: NavHostController? = null) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+                // Loyalty & Rewards Section (hidden for admin)
+                if (!isAdmin) {
+                    ProfileSection(
+                        title = "Loyalty & Rewards",
+                        items = listOf(
+                            ProfileItem(
+                                icon = Icons.Default.Star,
+                                title = "Loyalty balance",
+                                subtitle = "Points: ${userProfile?.loyaltyPoints ?: 0}",
+                                onClick = { }
+                            ),
+                            ProfileItem(
+                                icon = Icons.Default.Check,
+                                title = "Daily check-in (+5)",
+                                subtitle = "Claim once per day",
+                                onClick = {
+                                    if (userEmail != null) {
+                                        val claimed = claimDailyCheckIn(context)
+                                        if (claimed) {
+                                            coroutineScope.launch {
+                                                val dao = MovieDatabase.getDatabase(context).userProfileDao()
+                                                val current = max(userProfile?.loyaltyPoints ?: 0, 0)
+                                                dao.setLoyaltyPoints(userEmail, current + 5, System.currentTimeMillis())
+                                                android.widget.Toast.makeText(context, "You earned 5 points!", android.widget.Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            android.widget.Toast.makeText(context, "Already claimed today", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            ),
+                            ProfileItem(
+                                icon = Icons.Default.Person,
+                                title = "Complete profile bonus (+20)",
+                                subtitle = "Awarded once",
+                                onClick = {
+                                    if (userEmail != null) {
+                                        val profile = userProfile
+                                        if (profile != null && hasCompletedProfile(profile)) {
+                                            if (!isProfileBonusClaimed(context)) {
+                                                coroutineScope.launch {
+                                                    val dao = MovieDatabase.getDatabase(context).userProfileDao()
+                                                    val current = max(profile.loyaltyPoints, 0)
+                                                    dao.setLoyaltyPoints(userEmail, current + 20, System.currentTimeMillis())
+                                                    markProfileBonusClaimed(context)
+                                                    android.widget.Toast.makeText(context, "Profile completed! +20 points", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            } else {
+                                                android.widget.Toast.makeText(context, "Bonus already claimed", android.widget.Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            android.widget.Toast.makeText(context, "Fill in name and phone to qualify", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            )
+                        )
+                    )
+                }
+                
+                // Admin Section (only visible to admin) - moved before Personal Information
+                if (isAdmin) {
+                    ProfileSection(
+                        title = "Admin Controls",
+                        items = listOf(
+                            ProfileItem(
+                                icon = Icons.Default.Person,
+                                title = "Manage Users",
+                                subtitle = "View all users and their activity",
+                                onClick = {
+                                    val intent = android.content.Intent(context, com.example.redcurtainapp.AdminUserManagementActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+                            ),
+                            ProfileItem(
+                                icon = Icons.Default.Settings,
+                                title = "Manage Movie Times",
+                                subtitle = "Change showtimes for movies",
+                                onClick = {
+                                    val intent = android.content.Intent(context, com.example.redcurtainapp.AdminMovieTimeActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+                            ),
+                            ProfileItem(
+                                icon = Icons.Default.Info,
+                                title = "Manage Seats",
+                                subtitle = "Mark seats as inaccessible",
+                                onClick = {
+                                    val intent = android.content.Intent(context, com.example.redcurtainapp.AdminSeatManagementActivity::class.java)
+                                    context.startActivity(intent)
+                                }
+                            )
+                        )
+                    )
+                }
+                
                 // User Account Section
                 ProfileSection(
                     title = "Personal Information",
@@ -124,7 +222,8 @@ fun ProfileScreen(navController: NavHostController? = null) {
                             title = "User Account",
                             subtitle = userEmail ?: "Not logged in",
                             onClick = {
-                                showAccountDialog = true
+                                val intent = android.content.Intent(context, com.example.redcurtainapp.AccountDetailsActivity::class.java)
+                                context.startActivity(intent)
                             }
                         ),
                         ProfileItem(
@@ -158,6 +257,7 @@ fun ProfileScreen(navController: NavHostController? = null) {
                             title = "Appearance",
                             subtitle = "Font Size: ${fontSize}",
                             onClick = {
+                                // Could route to an AppearanceActivity later
                                 showFontSizeDialog = true
                             }
                         )
@@ -196,7 +296,8 @@ fun ProfileScreen(navController: NavHostController? = null) {
                             title = "App feedback",
                             subtitle = "Share your thoughts",
                             onClick = {
-                                showFeedbackDialog = true
+                                val intent = android.content.Intent(context, com.example.redcurtainapp.FeedbackActivity::class.java)
+                                context.startActivity(intent)
                             }
                         ),
                         ProfileItem(
@@ -252,34 +353,9 @@ fun ProfileScreen(navController: NavHostController? = null) {
         )
     }
     
-    // Feedback Dialog
-    if (showFeedbackDialog) {
-        FeedbackDialog(
-            feedbackText = feedbackText,
-            onFeedbackTextChange = { feedbackText = it },
-            onDismiss = { showFeedbackDialog = false },
-            onSend = {
-                val success = sendFeedbackEmail(context, feedbackText)
-                // Always show "sent" message regardless of method
-                feedbackText = ""
-                showFeedbackDialog = false
-                android.widget.Toast.makeText(
-                    context,
-                    "Feedback sent! Thank you for your feedback!",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-            }
-        )
-    }
+    // Feedback handled in FeedbackActivity
     
-    // Account Details Dialog
-    if (showAccountDialog) {
-        AccountDetailsDialog(
-            userEmail = userEmail,
-            userProfile = userProfile,
-            onDismiss = { showAccountDialog = false }
-        )
-    }
+    // Account details handled in AccountDetailsActivity
     
     // Edit Profile Dialog
     if (showEditProfileDialog) {
@@ -559,6 +635,8 @@ private fun FontSizePickerDialog(
 private const val PREFS_NAME = "profile_prefs"
 private const val KEY_THEME = "theme"
 private const val KEY_FONT_SIZE = "font_size"
+private const val KEY_LAST_DAILY_CHECKIN = "last_daily_checkin_epoch_day"
+private const val KEY_PROFILE_BONUS_CLAIMED = "profile_bonus_claimed"
 
 private fun getThemePreference(context: Context): Boolean {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -578,6 +656,35 @@ private fun getFontSizePreference(context: Context): String {
 private fun saveFontSizePreference(context: Context, fontSize: String) {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     prefs.edit().putString(KEY_FONT_SIZE, fontSize).apply()
+}
+
+private fun claimDailyCheckIn(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    val sdf = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US)
+    val todayKey = sdf.format(java.util.Date())
+    val last = prefs.getString(KEY_LAST_DAILY_CHECKIN, null)
+    return if (last != todayKey) {
+        prefs.edit().putString(KEY_LAST_DAILY_CHECKIN, todayKey).apply()
+        true
+    } else {
+        false
+    }
+}
+
+private fun hasCompletedProfile(userProfile: UserProfile): Boolean {
+    return !userProfile.firstName.isNullOrBlank() &&
+            !userProfile.lastName.isNullOrBlank() &&
+            !userProfile.phoneNumber.isNullOrBlank()
+}
+
+private fun isProfileBonusClaimed(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    return prefs.getBoolean(KEY_PROFILE_BONUS_CLAIMED, false)
+}
+
+private fun markProfileBonusClaimed(context: Context) {
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    prefs.edit().putBoolean(KEY_PROFILE_BONUS_CLAIMED, true).apply()
 }
 
 @Composable

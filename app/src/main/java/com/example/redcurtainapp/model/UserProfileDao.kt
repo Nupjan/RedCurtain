@@ -11,6 +11,15 @@ interface UserProfileDao {
     @Query("SELECT * FROM user_profiles WHERE email = :email")
     fun getUserProfileByEmailFlow(email: String): Flow<UserProfile?>
     
+    @Query("SELECT loyalty_points FROM user_profiles WHERE email = :email")
+    suspend fun getLoyaltyPoints(email: String): Int?
+    
+    @Query("UPDATE user_profiles SET loyalty_points = :points, updated_at = :updatedAt, needs_sync = 1 WHERE email = :email")
+    suspend fun setLoyaltyPoints(email: String, points: Int, updatedAt: Long)
+    
+    @Query("UPDATE user_profiles SET loyalty_points = COALESCE(loyalty_points, 0) + :delta, updated_at = :updatedAt, needs_sync = 1 WHERE email = :email")
+    suspend fun addLoyaltyPoints(email: String, delta: Int, updatedAt: Long)
+    
     @Query("SELECT * FROM user_profiles WHERE needs_sync = 1")
     suspend fun getProfilesNeedingSync(): List<UserProfile>
     
@@ -34,5 +43,14 @@ interface UserProfileDao {
     
     @Query("DELETE FROM user_profiles WHERE email = :email")
     suspend fun deleteUserProfileByEmail(email: String)
+    
+    @Query("SELECT COUNT(*) FROM user_profiles")
+    suspend fun getUsersCount(): Int
+    
+    @Query("SELECT COALESCE(SUM(loyalty_points), 0) FROM user_profiles")
+    suspend fun getTotalLoyaltyPoints(): Int
+    
+    @Query("SELECT * FROM user_profiles ORDER BY email")
+    suspend fun getAllUsers(): List<UserProfile>
 }
 

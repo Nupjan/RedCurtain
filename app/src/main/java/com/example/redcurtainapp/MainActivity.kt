@@ -34,6 +34,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
 
@@ -108,7 +109,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AppNavHost() {
     val navController = rememberNavController()
-    val items = listOf(Screen.Home, Screen.Polls, Screen.Profile)
+    val context = LocalContext.current
+    val isAdmin = AuthManager.isAdmin(context)
+    // Hide Loyalty tab for admin
+    val items = if (isAdmin) {
+        listOf(Screen.Home, Screen.Polls, Screen.Profile)
+    } else {
+        listOf(Screen.Home, Screen.Polls, Screen.Loyalty, Screen.Profile)
+    }
 
     Scaffold(
         bottomBar = {
@@ -119,6 +127,7 @@ private fun AppNavHost() {
                     val label = when (screen) {
                         Screen.Home -> "Home"
                         Screen.Polls -> "Polls"
+                        Screen.Loyalty -> "Loyalty"
                         Screen.Profile -> "Profile"
                         else -> screen.route
                     }
@@ -160,6 +169,9 @@ private fun AppNavHost() {
         }
         composable(Screen.Polls.route) {
             PollsScreen()
+        }
+        composable(Screen.Loyalty.route) {
+            com.example.redcurtainapp.ui.screens.LoyaltyScreen()
         }
         composable(Screen.Profile.route) {
             ProfileScreen(navController = navController)

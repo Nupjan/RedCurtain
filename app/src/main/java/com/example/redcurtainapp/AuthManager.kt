@@ -139,4 +139,12 @@ object AuthManager {
     fun generateAuthToken(email: String): String {
         return "token_${email.hashCode()}_${System.currentTimeMillis()}"
     }
+    
+    /**
+     * Check if current user is admin
+     */
+    fun isAdmin(context: Context): Boolean {
+        val email = getUserEmail(context)
+        return email != null && email.equals("admin@redcurtain.com", ignoreCase = true)
+    }
 }

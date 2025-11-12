@@ -7,6 +7,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.redcurtainapp.AuthManager
 import java.util.regex.Pattern
@@ -18,6 +19,10 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var rememberMeCheckBox: CheckBox
     private lateinit var signInButton: Button
     private lateinit var registerText: TextView
+    
+    companion object {
+        private const val TWO_FA_CODE = "839203"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,19 +127,15 @@ class SignInActivity : AppCompatActivity() {
 
         // Simulate authentication delay for better UX
         emailEditText.postDelayed({
-            if (AuthManager.validateCredentials(this, email, password)) {
-                val token = AuthManager.generateAuthToken(email)
-                AuthManager.saveLoginState(
-                    context = this,
-                    email = email,
-                    rememberMe = rememberMeCheckBox.isChecked,
-                    token = token
-                )
-                Toast.makeText(this, "Sign in successful!", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+            // Check for admin credentials first
+            val isAdmin = email.equals("admin@redcurtain.com", ignoreCase = true) && password == "Admin123!"
+            
+            if (isAdmin) {
+                // Admin login - show 2FA dialog
+                showTwoFactorAuthDialog(email, password, isAdmin = true)
+            } else if (AuthManager.validateCredentials(this, email, password)) {
+                // Regular user login - show 2FA dialog
+                showTwoFactorAuthDialog(email, password)
             } else {
                 Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show()
                 passwordEditText.requestFocus()
@@ -211,5 +212,103 @@ class SignInActivity : AppCompatActivity() {
     private fun clearFieldErrors() {
         clearFieldError(emailEditText)
         clearFieldError(passwordEditText)
+    }
+    
+    private fun showTwoFactorAuthDialog(email: String, password: String, isAdmin: Boolean = false) {
+        // Create custom dialog view
+        val dialogView = layoutInflater.inflate(R.layout.dialog_two_factor_auth, null)
+        val codeEditText = dialogView.findViewById<EditText>(R.id.two_fa_code_input)
+        val emailTextView = dialogView.findViewById<TextView>(R.id.two_fa_email_text)
+        val statusTextView = dialogView.findViewById<TextView>(R.id.two_fa_status_text)
+        
+        // Set email
+        emailTextView.text = "Email sent to: $email"
+        
+        // Show "Sending email..." then "Email sent"
+        statusTextView.text = "📧 Sending verification code..."
+        statusTextView.postDelayed({
+            statusTextView.text = "✅ Verification code sent!\n\nPlease check your email and enter the 6-digit code below."
+        }, 1500)
+        
+        // Create dialog
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Two-Factor Authentication")
+            .setView(dialogView)
+            .setCancelable(false)
+            .setPositiveButton("Verify", null)
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                signInButton.isEnabled = true
+                signInButton.text = "Sign In"
+            }
+            .create()
+        
+        dialog.setOnShowListener {
+            val verifyButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            verifyButton.setOnClickListener {
+                val enteredCode = codeEditText.text.toString().trim()
+                
+                if (enteredCode.isEmpty()) {
+                    codeEditText.error = "Please enter the verification code"
+                    codeEditText.requestFocus()
+                    return@setOnClickListener
+                }
+                
+                if (enteredCode == TWO_FA_CODE) {
+                    // Code is correct - complete login
+                    dialog.dismiss()
+                    if (isAdmin) {
+                        completeAdminSignIn(email, password)
+                    } else {
+                        completeSignIn(email, password)
+                    }
+                } else {
+                    // Code is incorrect
+                    codeEditText.error = "Invalid code. Please try again."
+                    codeEditText.text?.clear()
+                    codeEditText.requestFocus()
+                    Toast.makeText(this, "Invalid verification code", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        
+        dialog.show()
+        
+        // Focus on code input after dialog is shown
+        codeEditText.postDelayed({
+            codeEditText.requestFocus()
+        }, 2000) // Wait for "email sent" message
+    }
+    
+    private fun completeSignIn(email: String, password: String) {
+        // Complete the sign-in process
+        val token = AuthManager.generateAuthToken(email)
+        AuthManager.saveLoginState(
+            context = this,
+            email = email,
+            rememberMe = rememberMeCheckBox.isChecked,
+            token = token
+        )
+        Toast.makeText(this, "Sign in successful!", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
+    }
+    
+    private fun completeAdminSignIn(email: String, password: String) {
+        // Complete admin sign-in process
+        val token = AuthManager.generateAuthToken(email)
+        AuthManager.saveLoginState(
+            context = this,
+            email = email,
+            rememberMe = rememberMeCheckBox.isChecked,
+            token = token
+        )
+        Toast.makeText(this, "Admin login successful!", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

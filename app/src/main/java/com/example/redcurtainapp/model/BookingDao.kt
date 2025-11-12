@@ -8,6 +8,9 @@ interface BookingDao {
     @Query("SELECT * FROM bookings ORDER BY booking_date DESC")
     fun getAllBookings(): Flow<List<Booking>>
     
+    @Query("SELECT COUNT(*) FROM bookings")
+    suspend fun getBookingsCount(): Int
+    
     @Query("SELECT * FROM bookings WHERE user_email = :email ORDER BY booking_date DESC")
     fun getBookingsByUser(email: String): Flow<List<Booking>>
     
@@ -35,6 +38,9 @@ interface SeatBookingDao {
     @Query("SELECT * FROM seat_bookings WHERE booking_id = :bookingId")
     suspend fun getSeatBookingsByBookingId(bookingId: Long): List<SeatBooking>
     
+    @Query("SELECT COUNT(*) FROM seat_bookings WHERE movie_id = :movieId AND selected_date = :date AND selected_time = :time AND seat_id = :seatId")
+    suspend fun isSeatBooked(movieId: String, date: String, time: String, seatId: String): Int
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSeatBooking(seatBooking: SeatBooking)
     
@@ -52,6 +58,9 @@ interface SeatBookingDao {
 interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY transaction_date DESC")
     fun getAllTransactions(): Flow<List<Transaction>>
+    
+    @Query("SELECT COUNT(*) FROM transactions")
+    suspend fun getTransactionsCount(): Int
     
     @Query("SELECT * FROM transactions WHERE user_email = :email ORDER BY transaction_date DESC")
     fun getTransactionsByUser(email: String): Flow<List<Transaction>>

@@ -39,66 +39,97 @@ object TmdbApi {
     suspend fun fetchNowPlayingMovies(): List<TmdbMovie> = withContext(Dispatchers.IO) {
         try {
             // Try TMDB API first
-            val v4Token = com.example.redcurtainapp.BuildConfig.TMDB_V4_TOKEN
-            val v3Key = com.example.redcurtainapp.BuildConfig.TMDB_API_KEY
+            val v4Token = com.example.redcurtainapp.BuildConfig.TMDB_V4_TOKEN.trim()
+            val v3Key = com.example.redcurtainapp.BuildConfig.TMDB_API_KEY.trim()
             
-            Log.d("TmdbApi", "TMDB_V4_TOKEN: ${if (v4Token.isBlank()) "EMPTY" else "SET"}")
-            Log.d("TmdbApi", "TMDB_API_KEY: ${if (v3Key.isBlank()) "EMPTY" else "SET"}")
+            Log.d("TmdbApi", "TMDB_V4_TOKEN: ${if (v4Token.isBlank()) "EMPTY" else "SET (length: ${v4Token.length})"}")
+            Log.d("TmdbApi", "TMDB_API_KEY: ${if (v3Key.isBlank()) "EMPTY" else "SET (length: ${v3Key.length})"}")
             
-            if (v3Key.isNotBlank() || v4Token.isNotBlank()) {
-                val url = URL("$BASE_URL/movie/now_playing?language=en-US&page=1&region=US" + if (v4Token.isBlank()) "&api_key=$v3Key" else "")
-                Log.d("TmdbApi", "Fetching URL: $url")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.setRequestProperty("Accept", "application/json")
-                if (v4Token.isNotBlank()) {
-                    connection.setRequestProperty("Authorization", "Bearer $v4Token")
-                }
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = JSONObject(response)
-                    val results = jsonObject.getJSONArray("results")
-                    
-                    val movies = mutableListOf<TmdbMovie>()
-                    for (i in 0 until results.length()) {
-                        val movieJson = results.getJSONObject(i)
-                        val movie = TmdbMovie(
-                            id = movieJson.getInt("id"),
-                            title = movieJson.getString("title"),
-                            posterUrl = if (movieJson.isNull("poster_path")) null
-                                       else "$IMAGE_BASE${movieJson.getString("poster_path")}",
-                            overview = if (movieJson.isNull("overview")) null else movieJson.getString("overview"),
-                            releaseDate = if (movieJson.isNull("release_date")) null else movieJson.getString("release_date"),
-                            voteAverage = if (movieJson.isNull("vote_average")) null else movieJson.getDouble("vote_average"),
-                            backdropUrl = if (movieJson.isNull("backdrop_path")) null 
-                                        else "$BACKDROP_BASE${movieJson.getString("backdrop_path")}"
-                        )
-                        movies.add(movie)
-                    }
-                    Log.d("TmdbApi", "Fetched now_playing: ${movies.size} items")
-                    if (movies.isNotEmpty()) {
-                        return@withContext movies
-                    }
-                } else {
-                    val error = connection.errorStream?.bufferedReader()?.use { it.readText() }
-                    Log.e("TmdbApi", "HTTP $responseCode while fetching now_playing. Error: $error")
-                }
+            // Check if we have API credentials
+            if (v3Key.isBlank() && v4Token.isBlank()) {
+                Log.w("TmdbApi", "No API key or token configured. Add TMDB_API_KEY or TMDB_V4_TOKEN to local.properties")
+                Log.d("TmdbApi", "Using fallback movies (no API key)")
+                return@withContext getCurrentCinemaMovies()
             }
             
-            // Fallback to current cinema movies (2024-2025 releases)
-            Log.d("TmdbApi", "Using fallback current cinema movies")
-            getCurrentCinemaMovies()
+            // Build URL with proper authentication
+            val urlString = if (v4Token.isNotBlank()) {
+                "$BASE_URL/movie/now_playing?language=en-US&page=1&region=US"
+            } else {
+                "$BASE_URL/movie/now_playing?language=en-US&page=1&region=US&api_key=$v3Key"
+            }
+            
+            val url = URL(urlString)
+            Log.d("TmdbApi", "Fetching URL: ${urlString.replace(v3Key, "***").replace(v4Token, "***")}")
+            
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("Accept", "application/json")
+            if (v4Token.isNotBlank()) {
+                connection.setRequestProperty("Authorization", "Bearer $v4Token")
+            }
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
+
+            val responseCode = connection.responseCode
+            Log.d("TmdbApi", "Response code: $responseCode")
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val jsonObject = JSONObject(response)
+                
+                if (!jsonObject.has("results")) {
+                    Log.e("TmdbApi", "API response missing 'results' field")
+                    return@withContext getCurrentCinemaMovies()
+                }
+                
+                val results = jsonObject.getJSONArray("results")
+                val movies = mutableListOf<TmdbMovie>()
+                
+                for (i in 0 until results.length()) {
+                    val movieJson = results.getJSONObject(i)
+                    val movie = TmdbMovie(
+                        id = movieJson.getInt("id"),
+                        title = movieJson.getString("title"),
+                        posterUrl = if (movieJson.isNull("poster_path")) null
+                                   else "$IMAGE_BASE${movieJson.getString("poster_path")}",
+                        overview = if (movieJson.isNull("overview")) null else movieJson.getString("overview"),
+                        releaseDate = if (movieJson.isNull("release_date")) null else movieJson.getString("release_date"),
+                        voteAverage = if (movieJson.isNull("vote_average")) null else movieJson.getDouble("vote_average"),
+                        backdropUrl = if (movieJson.isNull("backdrop_path")) null 
+                                    else "$BACKDROP_BASE${movieJson.getString("backdrop_path")}"
+                    )
+                    movies.add(movie)
+                }
+                
+                Log.d("TmdbApi", "Successfully fetched ${movies.size} movies from API")
+                if (movies.isNotEmpty()) {
+                    return@withContext movies
+                } else {
+                    Log.w("TmdbApi", "API returned empty results, using fallback")
+                    return@withContext getCurrentCinemaMovies()
+                }
+            } else {
+                val error = try {
+                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "No error message"
+                } catch (e: Exception) {
+                    "Error reading error stream: ${e.message}"
+                }
+                Log.e("TmdbApi", "HTTP $responseCode while fetching now_playing. Error: $error")
+                Log.d("TmdbApi", "Using fallback movies due to API error")
+                return@withContext getCurrentCinemaMovies()
+            }
             
         } catch (e: SocketTimeoutException) {
-            Log.e("TmdbApi", "Timeout fetching now_playing", e)
-            getCurrentCinemaMovies()
+            Log.e("TmdbApi", "Timeout fetching now_playing (15s)", e)
+            return@withContext getCurrentCinemaMovies()
+        } catch (e: java.net.UnknownHostException) {
+            Log.e("TmdbApi", "Network error - no internet connection", e)
+            return@withContext getCurrentCinemaMovies()
         } catch (e: Exception) {
             Log.e("TmdbApi", "Exception fetching now_playing", e)
-            getCurrentCinemaMovies()
+            e.printStackTrace()
+            return@withContext getCurrentCinemaMovies()
         }
     }
     
@@ -278,64 +309,76 @@ object TmdbApi {
 
     suspend fun fetchMovieDetails(movieId: Int): TmdbMovieDetail? = withContext(Dispatchers.IO) {
         try {
-            val v4Token = com.example.redcurtainapp.BuildConfig.TMDB_V4_TOKEN
-            val v3Key = com.example.redcurtainapp.BuildConfig.TMDB_API_KEY
+            val v4Token = com.example.redcurtainapp.BuildConfig.TMDB_V4_TOKEN.trim()
+            val v3Key = com.example.redcurtainapp.BuildConfig.TMDB_API_KEY.trim()
             
-            if (v3Key.isNotBlank() || v4Token.isNotBlank()) {
-                val url = URL("$BASE_URL/movie/$movieId?language=en-US" + if (v4Token.isBlank()) "&api_key=$v3Key" else "")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.setRequestProperty("Accept", "application/json")
-                if (v4Token.isNotBlank()) {
-                    connection.setRequestProperty("Authorization", "Bearer $v4Token")
-                }
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-                
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val movieJson = JSONObject(response)
-                    
-                    val genres = mutableListOf<String>()
-                    if (!movieJson.isNull("genres")) {
-                        val genresArray = movieJson.getJSONArray("genres")
-                        for (i in 0 until genresArray.length()) {
-                            val genre = genresArray.getJSONObject(i)
-                            genres.add(genre.getString("name"))
-                        }
-                    }
-                    
-                    return@withContext TmdbMovieDetail(
-                        id = movieJson.getInt("id"),
-                        title = movieJson.getString("title"),
-                        overview = movieJson.getString("overview"),
-                        releaseDate = movieJson.getString("release_date"),
-                        voteAverage = movieJson.getDouble("vote_average"),
-                        posterUrl = if (movieJson.isNull("poster_path")) null
-                                   else "$IMAGE_BASE${movieJson.getString("poster_path")}",
-                        backdropUrl = if (movieJson.isNull("backdrop_path")) null 
-                                    else "$BACKDROP_BASE${movieJson.getString("backdrop_path")}",
-                        genres = genres,
-                        runtime = if (movieJson.isNull("runtime")) null else movieJson.getInt("runtime"),
-                        status = movieJson.getString("status")
-                    )
-                } else {
-                    val error = connection.errorStream?.bufferedReader()?.use { it.readText() }
-                    Log.e("TmdbApi", "HTTP $responseCode while fetching movie details. Error: $error")
-                }
+            if (v3Key.isBlank() && v4Token.isBlank()) {
+                Log.w("TmdbApi", "No API key or token configured for movie details. Add TMDB_API_KEY or TMDB_V4_TOKEN to local.properties")
+                return@withContext null
             }
             
-            // Fallback to mock movie details
-            Log.d("TmdbApi", "Using fallback movie details for ID: $movieId")
-            getMockMovieDetails(movieId)
+            val url = URL("$BASE_URL/movie/$movieId?language=en-US" + if (v4Token.isBlank()) "&api_key=$v3Key" else "")
+            Log.d("TmdbApi", "Fetching movie details for ID: $movieId")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("Accept", "application/json")
+            if (v4Token.isNotBlank()) {
+                connection.setRequestProperty("Authorization", "Bearer $v4Token")
+            }
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
+            
+            val responseCode = connection.responseCode
+            Log.d("TmdbApi", "Movie details response code: $responseCode for movie ID: $movieId")
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val movieJson = JSONObject(response)
+                
+                val genres = mutableListOf<String>()
+                if (!movieJson.isNull("genres")) {
+                    val genresArray = movieJson.getJSONArray("genres")
+                    for (i in 0 until genresArray.length()) {
+                        val genre = genresArray.getJSONObject(i)
+                        genres.add(genre.getString("name"))
+                    }
+                }
+                
+                return@withContext TmdbMovieDetail(
+                    id = movieJson.getInt("id"),
+                    title = movieJson.getString("title"),
+                    overview = movieJson.getString("overview"),
+                    releaseDate = movieJson.getString("release_date"),
+                    voteAverage = movieJson.getDouble("vote_average"),
+                    posterUrl = if (movieJson.isNull("poster_path")) null
+                               else "$IMAGE_BASE${movieJson.getString("poster_path")}",
+                    backdropUrl = if (movieJson.isNull("backdrop_path")) null 
+                                else "$BACKDROP_BASE${movieJson.getString("backdrop_path")}",
+                    genres = genres,
+                    runtime = if (movieJson.isNull("runtime")) null else movieJson.getInt("runtime"),
+                    status = movieJson.getString("status")
+                )
+            } else {
+                val error = try { 
+                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "No error message" 
+                } catch (e: Exception) { 
+                    "Error reading error stream: ${e.message}" 
+                }
+                Log.e("TmdbApi", "HTTP $responseCode while fetching movie details for ID $movieId. Error: $error")
+            }
+            
+            null
             
         } catch (e: SocketTimeoutException) {
-            Log.e("TmdbApi", "Timeout fetching movie details", e)
-            getMockMovieDetails(movieId)
+            Log.e("TmdbApi", "Timeout fetching movie details for ID $movieId (15s)", e)
+            null
+        } catch (e: java.net.UnknownHostException) {
+            Log.e("TmdbApi", "Network error - no internet connection for movie details", e)
+            null
         } catch (e: Exception) {
-            Log.e("TmdbApi", "Exception fetching movie details", e)
-            getMockMovieDetails(movieId)
+            Log.e("TmdbApi", "Exception fetching movie details for ID $movieId", e)
+            e.printStackTrace()
+            null
         }
     }
     

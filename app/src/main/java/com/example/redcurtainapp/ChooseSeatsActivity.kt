@@ -121,6 +121,21 @@ class ChooseSeatsActivity : AppCompatActivity() {
     }
     
     private fun handleSeatClick(seatId: String) {
+        // Convert seatId from "seat_a1" to "A1" format for checking
+        val seatIdFormatted = seatId.replace("seat_", "").uppercase().let { 
+            if (it.length >= 2) {
+                it[0].uppercase() + it.substring(1)
+            } else {
+                it
+            }
+        }
+        
+        // Check if seat is disabled by admin
+        if (AdminSeatManagementActivity.isSeatDisabled(this, seatIdFormatted)) {
+            Toast.makeText(this, "This seat is not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
         // Check if seat is reserved (only after booking)
         if (reservedSeats.contains(seatId)) {
             Toast.makeText(this, "This seat is already reserved", Toast.LENGTH_SHORT).show()
@@ -139,7 +154,22 @@ class ChooseSeatsActivity : AppCompatActivity() {
     
     private fun updateSeatDisplay() {
         seatViews.forEach { (seatId, imageView) ->
+            // Convert seatId from "seat_a1" to "A1" format for checking
+            val seatIdFormatted = seatId.replace("seat_", "").uppercase().let { 
+                if (it.length >= 2) {
+                    it[0].uppercase() + it.substring(1)
+                } else {
+                    it
+                }
+            }
+            
+            val isDisabled = AdminSeatManagementActivity.isSeatDisabled(this, seatIdFormatted)
+            
             when {
+                isDisabled -> {
+                    imageView.setImageResource(R.drawable.seat_reserved) // Use reserved drawable for disabled
+                    imageView.alpha = 0.4f
+                }
                 reservedSeats.contains(seatId) -> {
                     imageView.setImageResource(R.drawable.seat_reserved)
                     imageView.alpha = 0.6f
@@ -167,6 +197,63 @@ class ChooseSeatsActivity : AppCompatActivity() {
             return
         }
         
+        if (selectedDate.isEmpty() || selectedTime.isEmpty()) {
+            Toast.makeText(this, "Please select date and time", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Validate seats are not already booked before proceeding
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val database = MovieDatabase.getDatabase(this@ChooseSeatsActivity)
+                val bookedSeatIds = database.seatBookingDao().getBookedSeatIdsForShow(movieId, selectedDate, selectedTime)
+                val bookedSet = bookedSeatIds.toSet()
+                
+                // Convert selected seats to seat IDs (format: "A1", "B2", etc.)
+                val selectedSeatIds = selectedSeats.map { seatId ->
+                    val formatted = seatId.replace("seat_", "").uppercase()
+                    if (formatted.length >= 2) {
+                        formatted[0].uppercase() + formatted.substring(1)
+                    } else {
+                        formatted
+                    }
+                }
+                
+                // Check for conflicts
+                val conflictingSeats = selectedSeatIds.filter { it in bookedSet }
+                
+                runOnUiThread {
+                    if (conflictingSeats.isNotEmpty()) {
+                        Toast.makeText(
+                            this@ChooseSeatsActivity,
+                            "Seat(s) ${conflictingSeats.joinToString(", ")} are no longer available. Please select different seats.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        // Remove conflicting seats from selection
+                        selectedSeats.removeAll { seatId ->
+                            val formatted = seatId.replace("seat_", "").uppercase()
+                            val seatIdFormatted = if (formatted.length >= 2) {
+                                formatted[0].uppercase() + formatted.substring(1)
+                            } else {
+                                formatted
+                            }
+                            seatIdFormatted in conflictingSeats
+                        }
+                        updateSeatDisplay()
+                    } else {
+                        // All seats are available - proceed with booking
+                        proceedToBookingSummary()
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@ChooseSeatsActivity, "Error checking seat availability: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
+    private fun proceedToBookingSummary() {
         // Get movie info from intent
         val movieTitle = intent.getStringExtra("movieTitle") ?: "Movie"
         val finalDate = if (selectedDate.isNotEmpty()) selectedDate else "Not selected"
@@ -220,7 +307,8 @@ class ChooseSeatsActivity : AppCompatActivity() {
     }
     
     private fun showTimeOptionsDialog() {
-        val times = arrayOf("11:00 AM", "3:00 PM", "7:00 PM")
+        // Get showtimes from admin settings or use defaults
+        val times = AdminMovieTimeActivity.getShowTimes(this).toTypedArray()
         
         android.app.AlertDialog.Builder(this)
             .setTitle("Select Show Time")

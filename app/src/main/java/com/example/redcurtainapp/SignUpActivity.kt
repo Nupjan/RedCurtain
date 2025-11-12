@@ -8,6 +8,8 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.regex.Pattern
 
 class SignUpActivity : AppCompatActivity() {
@@ -144,6 +146,23 @@ class SignUpActivity : AppCompatActivity() {
         nameEditText.postDelayed({
             val registered = AuthManager.registerUser(this, email, password)
             if (registered) {
+                // Create a basic user profile in Room for persistence
+                val database = MovieDatabase.getDatabase(this)
+                val nameParts = name.split(" ", limit = 2)
+                val firstName = nameParts.getOrNull(0)
+                val lastName = nameParts.getOrNull(1)
+                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    database.userProfileDao().insertUserProfile(
+                        com.example.redcurtainapp.model.UserProfile(
+                            email = email,
+                            firstName = firstName,
+                            lastName = lastName,
+                            phoneNumber = phone,
+                            loyaltyPoints = 0,
+                            needsSync = true
+                        )
+                    )
+                }
                 Toast.makeText(this, "Account created successfully! You can sign in now.", Toast.LENGTH_LONG).show()
                 // Navigate back to sign in with pre-filled email
                 val intent = Intent(this, SignInActivity::class.java)

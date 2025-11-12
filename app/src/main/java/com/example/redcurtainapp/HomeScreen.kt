@@ -46,6 +46,8 @@ import com.example.redcurtainapp.model.SeatBookingDao
 import com.example.redcurtainapp.model.TransactionDao
 import com.example.redcurtainapp.model.UserProfile
 import com.example.redcurtainapp.model.UserProfileDao
+import org.json.JSONArray
+import org.json.JSONObject
 
 // --- Data Model ---
 @Entity(tableName = "movies")
@@ -85,7 +87,7 @@ interface MovieDao {
         Transaction::class,
         UserProfile::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class MovieDatabase : RoomDatabase() {
@@ -297,8 +299,11 @@ fun MovieGridScreen(navController: NavHostController) {
     var isLoadingMovies by remember { mutableStateOf(true) }
     var hasError by remember { mutableStateOf(false) }
 
+    // Refresh trigger state
+    var refreshTrigger by remember { mutableStateOf(0) }
+    
     // Refresh local DB from TMDB now playing (ONLY current cinema movies)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshTrigger) {
         isLoadingMovies = true
         hasError = false
         withContext(Dispatchers.IO) {
@@ -306,7 +311,6 @@ fun MovieGridScreen(navController: NavHostController) {
             try {
                 val now = TmdbApi.fetchNowPlayingMovies()
                 if (now.isNotEmpty()) {
-                    // Replace only when we have fresh data
                     movieDao.deleteAll()
                     val mapped = now.map { tmdbMovie ->
                         Movie(
@@ -321,14 +325,40 @@ fun MovieGridScreen(navController: NavHostController) {
                         )
                     }
                     movieDao.insertMovies(mapped)
+                    // Persist a lightweight cache of the last successful API response
+                    saveMoviesCache(context, mapped)
                 } else {
-                    // NO FALLBACK - only show current cinema movies
-                    movieDao.deleteAll()
+                    // API returned empty; fallback to cached movies if DB is empty
+                    if (movieDao.getCount() == 0) {
+                        val cached = loadMoviesCache(context)
+                        if (cached.isNotEmpty()) {
+                            movieDao.insertMovies(cached)
+                        } else {
+                            val sampleMovies = listOf(
+                                Movie("s1", "The Red Curtain", "https://picsum.photos/200/300?random=21"),
+                                Movie("s2", "Midnight Premiere", "https://picsum.photos/200/300?random=22"),
+                                Movie("s3", "Cinema Classics", "https://picsum.photos/200/300?random=23")
+                            )
+                            movieDao.insertMovies(sampleMovies)
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 hasError = true
-                // NO FALLBACK - only show current cinema movies
-                movieDao.deleteAll()
+                // Keep existing if any; otherwise seed fallback
+                if (movieDao.getCount() == 0) {
+                    val cached = loadMoviesCache(context)
+                    if (cached.isNotEmpty()) {
+                        movieDao.insertMovies(cached)
+                    } else {
+                        val sampleMovies = listOf(
+                            Movie("s1", "The Red Curtain", "https://picsum.photos/200/300?random=21"),
+                            Movie("s2", "Midnight Premiere", "https://picsum.photos/200/300?random=22"),
+                            Movie("s3", "Cinema Classics", "https://picsum.photos/200/300?random=23")
+                        )
+                        movieDao.insertMovies(sampleMovies)
+                    }
+                }
             } finally {
                 isLoadingMovies = false
             }
@@ -354,7 +384,20 @@ fun MovieGridScreen(navController: NavHostController) {
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )
-                Text(text = "Hi, Alex", style = MaterialTheme.typography.titleMedium)
+                val context = LocalContext.current
+                val email = remember { AuthManager.getUserEmail(context) }
+                val database = remember { MovieDatabase.getDatabase(context) }
+                var displayName by remember { mutableStateOf<String>("") }
+                LaunchedEffect(email) {
+                    if (email != null) {
+                        val profile = withContext(Dispatchers.IO) { database.userProfileDao().getUserProfileByEmail(email) }
+                        displayName = when {
+                            profile?.firstName?.isNotBlank() == true -> profile.firstName!!
+                            else -> email.substringBefore("@")
+                        }
+                    }
+                }
+                Text(text = "Hi, ${if (displayName.isNotBlank()) displayName else "there"}", style = MaterialTheme.typography.titleMedium)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Card(
@@ -415,32 +458,31 @@ fun MovieGridScreen(navController: NavHostController) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
                             text = "⚠️",
                             style = MaterialTheme.typography.displayMedium
                         )
                         Text(
-                            text = "Failed to load current cinema movies",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onBackground,
+                            text = "Failed to load movies",
+                            style = MaterialTheme.typography.titleLarge,
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Check your internet connection or TMDB API key\nWe only show movies currently playing in cinemas",
+                            text = "Check your internet connection or TMDB API key\n\nTo use the API:\n1. Get a free API key from https://www.themoviedb.org/settings/api\n2. Add it to local.properties:\n   TMDB_API_KEY=your_key_here\n   OR\n   TMDB_V4_TOKEN=your_token_here\n3. Rebuild the app",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
                         )
                         Button(
                             onClick = {
-                                // Retry loading movies
-                                isLoadingMovies = true
-                                hasError = false
+                                // Force refresh by incrementing trigger
+                                refreshTrigger++
                             }
                         ) {
-                            Text("Retry")
+                            Text("🔄 Retry")
                         }
                     }
                 }
@@ -490,5 +532,56 @@ fun MovieGridScreen(navController: NavHostController) {
                 }
             }
         }
+    }
+}
+
+// --- Simple persistent cache for last successful movies API ---
+private const val MOVIES_CACHE_PREF = "movies_cache_pref"
+private const val MOVIES_CACHE_KEY = "movies_cache_key"
+
+private fun saveMoviesCache(context: android.content.Context, movies: List<Movie>) {
+    try {
+        val arr = JSONArray()
+        movies.forEach { m ->
+            val obj = JSONObject()
+                .put("id", m.id)
+                .put("title", m.title)
+                .put("posterUrl", m.posterUrl)
+                .put("overview", m.overview)
+                .put("releaseDate", m.releaseDate)
+                .put("voteAverage", m.voteAverage)
+                .put("backdropUrl", m.backdropUrl)
+                .put("tmdbId", m.tmdbId)
+            arr.put(obj)
+        }
+        val prefs = context.getSharedPreferences(MOVIES_CACHE_PREF, android.content.Context.MODE_PRIVATE)
+        prefs.edit().putString(MOVIES_CACHE_KEY, arr.toString()).apply()
+    } catch (_: Exception) { }
+}
+
+private fun loadMoviesCache(context: android.content.Context): List<Movie> {
+    return try {
+        val prefs = context.getSharedPreferences(MOVIES_CACHE_PREF, android.content.Context.MODE_PRIVATE)
+        val json = prefs.getString(MOVIES_CACHE_KEY, null) ?: return emptyList()
+        val arr = JSONArray(json)
+        val list = mutableListOf<Movie>();
+        for (i in 0 until arr.length()) {
+            val obj = arr.getJSONObject(i)
+            list.add(
+                Movie(
+                    id = obj.optString("id"),
+                    title = obj.optString("title"),
+                    posterUrl = obj.optString("posterUrl"),
+                    overview = obj.optString("overview").takeIf { it.isNotBlank() },
+                    releaseDate = obj.optString("releaseDate").takeIf { it.isNotBlank() },
+                    voteAverage = if (obj.has("voteAverage") && !obj.isNull("voteAverage")) obj.getDouble("voteAverage") else null,
+                    backdropUrl = obj.optString("backdropUrl").takeIf { it.isNotBlank() },
+                    tmdbId = if (obj.has("tmdbId") && !obj.isNull("tmdbId")) obj.getInt("tmdbId") else null
+                )
+            )
+        }
+        list
+    } catch (_: Exception) {
+        emptyList()
     }
 }
